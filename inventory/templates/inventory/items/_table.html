@@ -1,0 +1,44 @@
+{% load inventory_tags %}
+{% if items %}
+<div class="table-responsive">
+  <table class="table table-hover align-middle">
+    <thead>
+      <tr>
+        <th>Item</th>
+        <th>Category</th>
+        <th>Acquired</th>
+        <th>Source</th>
+        <th>Condition</th>
+        <th>Status</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in items %}
+      <tr>
+        <td>
+          <a href="{{ item.get_absolute_url }}" class="fw-semibold text-decoration-none">{{ item.display_name }}</a>
+          {% if item.notes %}<br><small class="text-muted">{{ item.notes|truncatechars:60 }}</small>{% endif %}
+        </td>
+        <td class="small">{{ item.category|default:"—" }}</td>
+        <td class="small text-muted">{{ item.acquisition_date }}</td>
+        <td class="small text-muted">{{ item.acquisition_source|default:"—"|truncatechars:30 }}</td>
+        <td>{% include "inventory/items/_condition_badge.html" %}</td>
+        <td id="status-{{ item.pk }}">{% include "inventory/items/_status_badge.html" %}</td>
+        <td class="text-end">
+          <a href="{% url 'inventory:item_edit' item.pk %}" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-pencil"></i>
+          </a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="text-center text-muted py-5">
+  <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+  No items found.
+  <a href="{% url 'inventory:item_create' %}">Add your first item</a>
+</div>
+{% endif %}

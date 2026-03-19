@@ -1,0 +1,117 @@
+{% extends "inventory/base.html" %}
+{% load inventory_tags %}
+{% block title %}{{ auction.title }}{% endblock %}
+{% block nav_auctions %}active{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-3">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{% url 'inventory:auction_list' %}">Auctions</a></li>
+    <li class="breadcrumb-item active">{{ auction.title }}</li>
+  </ol>
+</nav>
+
+<div class="d-flex justify-content-between align-items-start mb-3">
+  <div>
+    <h1 class="h3 mb-1">{{ auction.title }}</h1>
+    <div class="d-flex gap-2 align-items-center flex-wrap">
+      {% include "inventory/auctions/_status_badge.html" %}
+      {% if auction.ebay_item_id %}
+        <a href="{{ auction.ebay_url }}" target="_blank" rel="noopener" class="small text-muted">
+          eBay #{{ auction.ebay_item_id }} <i class="bi bi-box-arrow-up-right"></i>
+        </a>
+      {% endif %}
+    </div>
+  </div>
+  <div class="d-flex gap-2 flex-wrap">
+    {% if auction.status == 'active' %}
+      <a href="{% url 'inventory:auction_convert' auction.pk %}" class="btn btn-success">
+        <i class="bi bi-arrow-right-circle me-1"></i>Convert to Sale
+      </a>
+    {% elif auction.sale %}
+      <a href="{{ auction.sale.get_absolute_url }}" class="btn btn-outline-success">
+        <i class="bi bi-cash-coin me-1"></i>View Sale
+      </a>
+    {% endif %}
+    <a href="{% url 'inventory:auction_edit' auction.pk %}" class="btn btn-outline-secondary">
+      <i class="bi bi-pencil me-1"></i>Edit
+    </a>
+    <a href="{% url 'inventory:auction_delete' auction.pk %}" class="btn btn-outline-danger">
+      <i class="bi bi-trash me-1"></i>Delete
+    </a>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-12 col-md-4">
+    <div class="card mb-3">
+      <div class="card-header">Auction Details</div>
+      <ul class="list-group list-group-flush">
+        {% if auction.item %}
+        <li class="list-group-item">
+          <span class="text-muted small">Item</span><br>
+          <a href="{{ auction.item.get_absolute_url }}">{{ auction.item.display_name }}</a>
+        </li>
+        {% endif %}
+        {% if auction.part %}
+        <li class="list-group-item">
+          <span class="text-muted small">Part</span><br>
+          <a href="{{ auction.part.get_absolute_url }}">{{ auction.part }}</a>
+        </li>
+        {% endif %}
+        <li class="list-group-item d-flex justify-content-between">
+          <span class="text-muted">Start date</span><span>{{ auction.start_date }}</span>
+        </li>
+        <li class="list-group-item d-flex justify-content-between">
+          <span class="text-muted">End date</span><span>{{ auction.end_date }}</span>
+        </li>
+        {% if auction.starting_bid %}
+        <li class="list-group-item d-flex justify-content-between">
+          <span class="text-muted">Starting bid</span><span>${{ auction.starting_bid }}</span>
+        </li>
+        {% endif %}
+        {% if auction.buy_it_now %}
+        <li class="list-group-item d-flex justify-content-between">
+          <span class="text-muted">Buy It Now</span><span>${{ auction.buy_it_now }}</span>
+        </li>
+        {% endif %}
+        {% if auction.final_price %}
+        <li class="list-group-item d-flex justify-content-between fw-bold">
+          <span>Final price</span><span class="text-success">{{ auction.final_price|currency }}</span>
+        </li>
+        {% endif %}
+      </ul>
+    </div>
+
+    {% if auction.sale %}
+    <div class="card border-success">
+      <div class="card-header text-success"><i class="bi bi-check-circle me-2"></i>Converted to Sale</div>
+      <div class="card-body">
+        <p class="mb-2">This auction was converted to a sale record.</p>
+        <a href="{{ auction.sale.get_absolute_url }}" class="btn btn-sm btn-outline-success w-100">
+          View Sale — {{ auction.sale.net_amount|currency }} net
+        </a>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="col-12 col-md-8">
+    {% if auction.status == 'active' %}
+    <div class="alert alert-info d-flex align-items-start gap-3">
+      <i class="bi bi-info-circle fs-4 mt-1"></i>
+      <div>
+        <strong>Auction is active.</strong> When it sells, click <strong>Convert to Sale</strong> to create a sale record. You can enter the final winning bid price and eBay fees at that time.
+      </div>
+    </div>
+    {% endif %}
+
+    {% if auction.notes %}
+    <div class="card">
+      <div class="card-header">Notes</div>
+      <div class="card-body"><pre class="note-text mb-0">{{ auction.notes }}</pre></div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

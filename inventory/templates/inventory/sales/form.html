@@ -1,0 +1,26 @@
+{% extends "inventory/base.html" %}
+{% load crispy_forms_tags %}
+{% block title %}{{ title }}{% endblock %}
+{% block nav_sales %}active{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-3">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{% url 'inventory:sale_list' %}">Sales</a></li>
+    {% if sale %}<li class="breadcrumb-item"><a href="{{ sale.get_absolute_url }}">Sale #{{ sale.pk }}</a></li>{% endif %}
+    <li class="breadcrumb-item active">{{ title }}</li>
+  </ol>
+</nav>
+
+<div class="row justify-content-center">
+  <div class="col-12 col-lg-8">
+    <div class="card">
+      <div class="card-header"><h5 class="mb-0">{{ title }}</h5></div>
+      <div class="card-body">
+        <p class="text-muted small">Link this sale to an existing Item or Part, or just fill in the description. When you save, the linked item/part status will be set to "Sold" automatically.</p>
+        {% crispy form %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

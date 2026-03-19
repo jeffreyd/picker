@@ -1,0 +1,44 @@
+{% extends "inventory/base.html" %}
+{% block title %}Categories{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0"><i class="bi bi-tags me-2"></i>Categories</h1>
+  <a href="{% url 'inventory:category_create' %}" class="btn btn-success">
+    <i class="bi bi-plus-lg me-1"></i>Add Category
+  </a>
+</div>
+
+{% if categories %}
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead><tr><th>Name</th><th>Items</th><th>Model Notes</th><th></th></tr></thead>
+      <tbody>
+        {% for cat in categories %}
+        <tr>
+          <td class="fw-semibold">{{ cat }}</td>
+          <td>{{ cat.items.count }}</td>
+          <td>{{ cat.model_notes.count }}</td>
+          <td class="text-end">
+            <a href="{% url 'inventory:category_edit' cat.pk %}" class="btn btn-sm btn-outline-secondary">
+              <i class="bi bi-pencil"></i>
+            </a>
+            <a href="{% url 'inventory:category_delete' cat.pk %}" class="btn btn-sm btn-outline-danger ms-1">
+              <i class="bi bi-trash"></i>
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="text-center text-muted py-5">
+  <i class="bi bi-tags fs-1 d-block mb-2"></i>
+  No categories yet.
+  <a href="{% url 'inventory:category_create' %}">Add one</a>
+</div>
+{% endif %}
+{% endblock %}

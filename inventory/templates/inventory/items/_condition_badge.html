@@ -1,0 +1,6 @@
+{% comment %}Expects `item` in context{% endcomment %}
+{% if item.condition == 'working' %}<span class="badge bg-success">Working</span>
+{% elif item.condition == 'working_issues' %}<span class="badge bg-warning text-dark">Issues</span>
+{% elif item.condition == 'not_working' %}<span class="badge bg-danger">Not Working</span>
+{% elif item.condition == 'parts_only' %}<span class="badge bg-secondary">Parts Only</span>
+{% else %}<span class="badge bg-secondary">Unknown</span>{% endif %}

@@ -1,0 +1,43 @@
+{% if orders %}
+<div class="table-responsive">
+  <table class="table table-hover align-middle">
+    <thead>
+      <tr>
+        <th>Description</th>
+        <th>Supplier</th>
+        <th>Ordered</th>
+        <th>Cost</th>
+        <th>For Item</th>
+        <th>Status</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for order in orders %}
+      <tr>
+        <td>
+          <a href="{{ order.get_absolute_url }}" class="fw-semibold text-decoration-none">{{ order.description }}</a>
+          {% if order.tracking_number %}<br><small class="text-muted">Track: {{ order.tracking_number }}</small>{% endif %}
+        </td>
+        <td class="small">{{ order.supplier_display }}</td>
+        <td class="small text-muted">{{ order.order_date }}</td>
+        <td>${{ order.total_cost }}</td>
+        <td class="small">{% if order.for_item %}<a href="{{ order.for_item.get_absolute_url }}">{{ order.for_item.display_name }}</a>{% else %}—{% endif %}</td>
+        <td id="order-status-{{ order.pk }}">{% include "inventory/orders/_status_badge.html" %}</td>
+        <td class="text-end">
+          <a href="{% url 'inventory:order_edit' order.pk %}" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-pencil"></i>
+          </a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="text-center text-muted py-5">
+  <i class="bi bi-cart fs-1 d-block mb-2"></i>
+  No orders found.
+  <a href="{% url 'inventory:order_create' %}">Place your first order</a>
+</div>
+{% endif %}

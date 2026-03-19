@@ -1,0 +1,35 @@
+{% extends "inventory/base.html" %}
+{% block title %}Auctions{% endblock %}
+{% block nav_auctions %}active{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0"><i class="bi bi-hammer me-2"></i>eBay Auctions</h1>
+  <a href="{% url 'inventory:auction_create' %}" class="btn btn-success">
+    <i class="bi bi-plus-lg me-1"></i>Add Auction
+  </a>
+</div>
+
+<form class="row g-2 mb-3"
+      hx-get="{% url 'inventory:auction_list' %}"
+      hx-target="#results"
+      hx-trigger="change, input delay:400ms"
+      hx-push-url="true">
+  <div class="col-12 col-md-8">
+    <input type="search" name="q" value="{{ q }}" class="form-control"
+           placeholder="Search auctions..." autocomplete="off">
+  </div>
+  <div class="col-12 col-md-3">
+    <select name="status" class="form-select">
+      <option value="">All Statuses</option>
+      {% for val, label in status_choices %}
+        <option value="{{ val }}" {% if val == status %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+  </div>
+</form>
+
+<div id="results">
+  {% include "inventory/auctions/_table.html" %}
+</div>
+{% endblock %}

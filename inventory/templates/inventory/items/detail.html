@@ -1,0 +1,289 @@
+{% extends "inventory/base.html" %}
+{% load inventory_tags %}
+{% block title %}{{ item.display_name }}{% endblock %}
+{% block nav_items %}active{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-3">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{% url 'inventory:item_list' %}">Items</a></li>
+    <li class="breadcrumb-item active">{{ item.display_name }}</li>
+  </ol>
+</nav>
+
+<div class="d-flex justify-content-between align-items-start mb-3">
+  <div>
+    <h1 class="h3 mb-1">{{ item.display_name }}</h1>
+    <div class="d-flex gap-2 flex-wrap">
+      {% include "inventory/items/_condition_badge.html" %}
+      {% include "inventory/items/_status_badge.html" %}
+      {% if item.category %}<span class="badge bg-dark border">{{ item.category }}</span>{% endif %}
+    </div>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="{% url 'inventory:item_edit' item.pk %}" class="btn btn-outline-secondary">
+      <i class="bi bi-pencil me-1"></i>Edit
+    </a>
+    <a href="{% url 'inventory:item_delete' item.pk %}" class="btn btn-outline-danger">
+      <i class="bi bi-trash me-1"></i>Delete
+    </a>
+  </div>
+</div>
+
+<div class="row g-3">
+  <!-- Details card -->
+  <div class="col-12 col-md-4">
+    <div class="card mb-3">
+      <div class="card-header">Details</div>
+      <ul class="list-group list-group-flush">
+        {% if item.make or item.model %}
+        <li class="list-group-item">
+          <span class="text-muted small">Make / Model</span><br>
+          {{ item.make }} {{ item.model }}
+        </li>
+        {% endif %}
+        <li class="list-group-item">
+          <span class="text-muted small">Acquired</span><br>
+          {{ item.acquisition_date }}
+        </li>
+        {% if item.acquisition_source %}
+        <li class="list-group-item">
+          <span class="text-muted small">Source</span><br>
+          {{ item.acquisition_source }}
+        </li>
+        {% endif %}
+        <li class="list-group-item">
+          <span class="text-muted small">Cost Basis</span><br>
+          {{ item.cost_basis|currency }}
+        </li>
+      </ul>
+    </div>
+
+    <!-- Financials -->
+    <div class="card mb-3">
+      <div class="card-header">Financials</div>
+      <ul class="list-group list-group-flush">
+        <li class="list-group-item d-flex justify-content-between">
+          <span class="text-muted">Cost basis</span>
+          <span>{{ item.cost_basis|currency }}</span>
+        </li>
+        <li class="list-group-item d-flex justify-content-between">
+          <span class="text-muted">Parts ordered</span>
+          <span>{{ item.total_parts_cost|currency }}</span>
+        </li>
+        <li class="list-group-item d-flex justify-content-between">
+          <span class="text-muted">Revenue (net)</span>
+          <span class="text-success">{{ item.total_revenue|currency }}</span>
+        </li>
+        <li class="list-group-item d-flex justify-content-between fw-bold">
+          <span>Profit</span>
+          <span class="{% if item.profit >= 0 %}profit-positive{% else %}profit-negative{% endif %}">
+            {{ item.profit|currency }}
+          </span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Quick Status Change -->
+    <div class="card">
+      <div class="card-header">Update Status</div>
+      <div class="card-body">
+        <form hx-post="{% url 'inventory:item_status_update' item.pk %}"
+              hx-target="#status-inline"
+              hx-swap="outerHTML">
+          {% csrf_token %}
+          <select name="status" class="form-select form-select-sm mb-2">
+            {% for val, label in item.STATUS_CHOICES %}
+              <option value="{{ val }}" {% if val == item.status %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+          <button type="submit" class="btn btn-sm btn-primary w-100">Update</button>
+        </form>
+        <div id="status-inline" class="mt-2">{% include "inventory/items/_status_badge.html" %}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-md-8">
+    <!-- Notes -->
+    {% if item.notes %}
+    <div class="card mb-3">
+      <div class="card-header">Notes</div>
+      <div class="card-body">
+        <pre class="note-text mb-0">{{ item.notes }}</pre>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Model notes link -->
+    {% if item.make and item.model %}
+    <div class="alert alert-info d-flex align-items-center gap-2 mb-3">
+      <i class="bi bi-journal-text fs-5"></i>
+      <div>
+        Looking for reference notes on the <strong>{{ item.make }} {{ item.model }}</strong>?
+        <a href="{% url 'inventory:modelnote_list' %}?q={{ item.make }}+{{ item.model }}">Search model notes</a>
+        &nbsp;·&nbsp;
+        <a href="{% url 'inventory:modelnote_create' %}?make={{ item.make }}&model={{ item.model }}">Add a note</a>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Harvested Parts -->
+    <div class="card mb-3">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-puzzle me-2"></i>Harvested Parts ({{ harvested_parts.count }})</span>
+        <a href="{% url 'inventory:part_create' %}?source_item={{ item.pk }}&next={{ item.get_absolute_url }}"
+           class="btn btn-sm btn-outline-success">
+          <i class="bi bi-plus-lg"></i> Add Part
+        </a>
+      </div>
+      {% if harvested_parts %}
+      <div class="table-responsive">
+        <table class="table table-sm mb-0">
+          <thead><tr><th>Part</th><th>Condition</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            {% for part in harvested_parts %}
+            <tr>
+              <td><a href="{{ part.get_absolute_url }}">{{ part }}</a></td>
+              <td class="small">{{ part.condition|default:"—" }}</td>
+              <td><span class="badge bg-secondary">{{ part.get_status_display }}</span></td>
+              <td><a href="{% url 'inventory:part_edit' part.pk %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="card-body text-muted small">No harvested parts yet.</div>
+      {% endif %}
+    </div>
+
+    <!-- Repair Parts -->
+    <div class="card mb-3">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-tools me-2"></i>Repair Parts Used ({{ repair_parts.count }})</span>
+        <a href="{% url 'inventory:part_create' %}?used_in_item={{ item.pk }}&next={{ item.get_absolute_url }}"
+           class="btn btn-sm btn-outline-success">
+          <i class="bi bi-plus-lg"></i> Add Part
+        </a>
+      </div>
+      {% if repair_parts %}
+      <div class="table-responsive">
+        <table class="table table-sm mb-0">
+          <thead><tr><th>Part</th><th>Condition</th><th>Status</th></tr></thead>
+          <tbody>
+            {% for part in repair_parts %}
+            <tr>
+              <td><a href="{{ part.get_absolute_url }}">{{ part }}</a></td>
+              <td class="small">{{ part.condition|default:"—" }}</td>
+              <td><span class="badge bg-secondary">{{ part.get_status_display }}</span></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="card-body text-muted small">No repair parts recorded.</div>
+      {% endif %}
+    </div>
+
+    <!-- Orders -->
+    <div class="card mb-3">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-cart me-2"></i>Parts Orders ({{ orders.count }})</span>
+        <a href="{% url 'inventory:order_create' %}?for_item={{ item.pk }}&next={{ item.get_absolute_url }}"
+           class="btn btn-sm btn-outline-success">
+          <i class="bi bi-plus-lg"></i> Add Order
+        </a>
+      </div>
+      {% if orders %}
+      <div class="table-responsive">
+        <table class="table table-sm mb-0">
+          <thead><tr><th>Description</th><th>Supplier</th><th>Cost</th><th>Status</th></tr></thead>
+          <tbody>
+            {% for order in orders %}
+            <tr>
+              <td><a href="{{ order.get_absolute_url }}">{{ order }}</a></td>
+              <td class="small">{{ order.supplier_display }}</td>
+              <td>${{ order.total_cost }}</td>
+              <td>{% include "inventory/orders/_status_badge.html" %}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="card-body text-muted small">No orders yet.</div>
+      {% endif %}
+    </div>
+
+    <!-- Auctions -->
+    <div class="card mb-3">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-hammer me-2"></i>eBay Auctions ({{ auctions.count }})</span>
+        <a href="{% url 'inventory:auction_create' %}?item={{ item.pk }}&next={{ item.get_absolute_url }}"
+           class="btn btn-sm btn-outline-success">
+          <i class="bi bi-plus-lg"></i> Add Auction
+        </a>
+      </div>
+      {% if auctions %}
+      <div class="table-responsive">
+        <table class="table table-sm mb-0">
+          <thead><tr><th>Title</th><th>End Date</th><th>Final</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            {% for auction in auctions %}
+            <tr>
+              <td><a href="{{ auction.get_absolute_url }}">{{ auction.title }}</a></td>
+              <td class="small text-muted">{{ auction.end_date }}</td>
+              <td class="small">{% if auction.final_price %}{{ auction.final_price|currency }}{% else %}—{% endif %}</td>
+              <td>{% include "inventory/auctions/_status_badge.html" %}</td>
+              <td class="text-end">
+                {% if auction.status == 'active' %}
+                  <a href="{% url 'inventory:auction_convert' auction.pk %}" class="btn btn-sm btn-success">Convert</a>
+                {% elif auction.sale %}
+                  <a href="{{ auction.sale.get_absolute_url }}" class="btn btn-sm btn-outline-secondary">Sale</a>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="card-body text-muted small">No auctions yet.</div>
+      {% endif %}
+    </div>
+
+    <!-- Sales -->
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-cash-coin me-2"></i>Sales ({{ sales.count }})</span>
+        <a href="{% url 'inventory:sale_create' %}?item={{ item.pk }}&next={{ item.get_absolute_url }}"
+           class="btn btn-sm btn-outline-success">
+          <i class="bi bi-plus-lg"></i> Record Sale
+        </a>
+      </div>
+      {% if sales %}
+      <div class="table-responsive">
+        <table class="table table-sm mb-0">
+          <thead><tr><th>Date</th><th>Platform</th><th>Price</th><th>Fees</th><th>Net</th></tr></thead>
+          <tbody>
+            {% for sale in sales %}
+            <tr>
+              <td><a href="{{ sale.get_absolute_url }}">{{ sale.sale_date }}</a></td>
+              <td class="small">{{ sale.get_platform_display }}</td>
+              <td>${{ sale.sale_price }}</td>
+              <td class="text-muted">${{ sale.fees }}</td>
+              <td class="text-success">{{ sale.net_amount|currency }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="card-body text-muted small">No sales yet.</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

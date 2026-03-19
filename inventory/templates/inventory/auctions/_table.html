@@ -1,0 +1,65 @@
+{% load inventory_tags %}
+{% if auctions %}
+<div class="table-responsive">
+  <table class="table table-hover align-middle">
+    <thead>
+      <tr>
+        <th>Title</th>
+        <th>Item / Part</th>
+        <th>End Date</th>
+        <th>Start Bid</th>
+        <th>BIN</th>
+        <th>Final</th>
+        <th>Status</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for auction in auctions %}
+      <tr>
+        <td>
+          <a href="{{ auction.get_absolute_url }}" class="fw-semibold text-decoration-none">{{ auction.title }}</a>
+          {% if auction.ebay_item_id %}
+            <br><small class="text-muted">
+              <a href="{{ auction.ebay_url }}" target="_blank" rel="noopener" class="text-muted">
+                #{{ auction.ebay_item_id }} <i class="bi bi-box-arrow-up-right"></i>
+              </a>
+            </small>
+          {% endif %}
+        </td>
+        <td class="small">
+          {% if auction.item %}<a href="{{ auction.item.get_absolute_url }}">{{ auction.item.display_name }}</a>
+          {% elif auction.part %}<a href="{{ auction.part.get_absolute_url }}">{{ auction.part }}</a>
+          {% else %}—{% endif %}
+        </td>
+        <td class="small text-muted">{{ auction.end_date }}</td>
+        <td class="small">{% if auction.starting_bid %}${{ auction.starting_bid }}{% else %}—{% endif %}</td>
+        <td class="small">{% if auction.buy_it_now %}${{ auction.buy_it_now }}{% else %}—{% endif %}</td>
+        <td class="small fw-semibold">{% if auction.final_price %}{{ auction.final_price|currency }}{% else %}—{% endif %}</td>
+        <td>{% include "inventory/auctions/_status_badge.html" %}</td>
+        <td class="text-end text-nowrap">
+          {% if auction.status == 'active' %}
+            <a href="{% url 'inventory:auction_convert' auction.pk %}" class="btn btn-sm btn-success" title="Convert to Sale">
+              <i class="bi bi-arrow-right-circle me-1"></i>Convert
+            </a>
+          {% elif auction.sale %}
+            <a href="{{ auction.sale.get_absolute_url }}" class="btn btn-sm btn-outline-secondary" title="View Sale">
+              <i class="bi bi-cash-coin"></i>
+            </a>
+          {% endif %}
+          <a href="{% url 'inventory:auction_edit' auction.pk %}" class="btn btn-sm btn-outline-secondary ms-1">
+            <i class="bi bi-pencil"></i>
+          </a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="text-center text-muted py-5">
+  <i class="bi bi-hammer fs-1 d-block mb-2"></i>
+  No auctions found.
+  <a href="{% url 'inventory:auction_create' %}">List your first auction</a>
+</div>
+{% endif %}

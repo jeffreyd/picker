@@ -1,0 +1,100 @@
+{% extends "inventory/base.html" %}
+{% load inventory_tags %}
+{% block title %}{{ order.description }}{% endblock %}
+{% block nav_orders %}active{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-3">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{% url 'inventory:order_list' %}">Orders</a></li>
+    <li class="breadcrumb-item active">{{ order.description }}</li>
+  </ol>
+</nav>
+
+<div class="d-flex justify-content-between align-items-start mb-3">
+  <div>
+    <h1 class="h3 mb-1">{{ order.description }}</h1>
+    <div>{% include "inventory/orders/_status_badge.html" %}</div>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="{% url 'inventory:order_edit' order.pk %}" class="btn btn-outline-secondary">
+      <i class="bi bi-pencil me-1"></i>Edit
+    </a>
+    <a href="{% url 'inventory:order_delete' order.pk %}" class="btn btn-outline-danger">
+      <i class="bi bi-trash me-1"></i>Delete
+    </a>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-12 col-md-4">
+    <div class="card mb-3">
+      <div class="card-header">Details</div>
+      <ul class="list-group list-group-flush">
+        <li class="list-group-item">
+          <span class="text-muted small">Supplier</span><br>{{ order.supplier_display }}
+        </li>
+        <li class="list-group-item">
+          <span class="text-muted small">Order Date</span><br>{{ order.order_date }}
+        </li>
+        {% if order.expected_date %}
+        <li class="list-group-item">
+          <span class="text-muted small">Expected</span><br>{{ order.expected_date }}
+        </li>
+        {% endif %}
+        {% if order.received_date %}
+        <li class="list-group-item">
+          <span class="text-muted small">Received</span><br>{{ order.received_date }}
+        </li>
+        {% endif %}
+        {% if order.tracking_number %}
+        <li class="list-group-item">
+          <span class="text-muted small">Tracking</span><br>
+          <code>{{ order.tracking_number }}</code>
+        </li>
+        {% endif %}
+        <li class="list-group-item">
+          <span class="text-muted small">Total Cost</span><br>
+          <strong>{{ order.total_cost|currency }}</strong>
+        </li>
+        {% if order.for_item %}
+        <li class="list-group-item">
+          <span class="text-muted small">For Item</span><br>
+          <a href="{{ order.for_item.get_absolute_url }}">{{ order.for_item.display_name }}</a>
+        </li>
+        {% endif %}
+      </ul>
+    </div>
+
+    <!-- Quick status update -->
+    <div class="card">
+      <div class="card-header">Update Status</div>
+      <div class="card-body">
+        <form hx-post="{% url 'inventory:order_status_update' order.pk %}"
+              hx-target="#order-status-inline"
+              hx-swap="outerHTML">
+          {% csrf_token %}
+          <select name="status" class="form-select form-select-sm mb-2">
+            {% for val, label in order.STATUS_CHOICES %}
+              <option value="{{ val }}" {% if val == order.status %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+          <button type="submit" class="btn btn-sm btn-primary w-100">Update</button>
+        </form>
+        <div id="order-status-inline" class="mt-2">{% include "inventory/orders/_status_badge.html" %}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-md-8">
+    {% if order.notes %}
+    <div class="card">
+      <div class="card-header">Notes</div>
+      <div class="card-body">
+        <pre class="note-text mb-0">{{ order.notes }}</pre>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,70 @@
+{% extends "inventory/base.html" %}
+{% load crispy_forms_tags inventory_tags %}
+{% block title %}Convert Auction to Sale{% endblock %}
+{% block nav_auctions %}active{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-3">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{% url 'inventory:auction_list' %}">Auctions</a></li>
+    <li class="breadcrumb-item"><a href="{{ auction.get_absolute_url }}">{{ auction }}</a></li>
+    <li class="breadcrumb-item active">Convert to Sale</li>
+  </ol>
+</nav>
+
+<div class="row g-3">
+  <!-- Auction summary sidebar -->
+  <div class="col-12 col-md-4 order-md-2">
+    <div class="card mb-3 border-secondary">
+      <div class="card-header"><i class="bi bi-hammer me-2"></i>Auction Summary</div>
+      <ul class="list-group list-group-flush">
+        <li class="list-group-item">
+          <span class="text-muted small">Title</span><br>
+          <a href="{{ auction.get_absolute_url }}">{{ auction.title }}</a>
+        </li>
+        {% if auction.item %}
+        <li class="list-group-item">
+          <span class="text-muted small">Item</span><br>
+          <a href="{{ auction.item.get_absolute_url }}">{{ auction.item.display_name }}</a>
+        </li>
+        {% endif %}
+        {% if auction.part %}
+        <li class="list-group-item">
+          <span class="text-muted small">Part</span><br>{{ auction.part }}
+        </li>
+        {% endif %}
+        {% if auction.starting_bid %}
+        <li class="list-group-item d-flex justify-content-between">
+          <span class="text-muted">Starting bid</span><span>${{ auction.starting_bid }}</span>
+        </li>
+        {% endif %}
+        {% if auction.final_price %}
+        <li class="list-group-item d-flex justify-content-between">
+          <span class="text-muted">Final price recorded</span>
+          <span class="text-success fw-bold">{{ auction.final_price|currency }}</span>
+        </li>
+        {% endif %}
+        {% if auction.ebay_item_id %}
+        <li class="list-group-item">
+          <a href="{{ auction.ebay_url }}" target="_blank" rel="noopener" class="small">
+            View on eBay <i class="bi bi-box-arrow-up-right"></i>
+          </a>
+        </li>
+        {% endif %}
+      </ul>
+    </div>
+    <div class="alert alert-info small">
+      <i class="bi bi-info-circle me-1"></i>
+      The form is pre-filled with auction details. Adjust the sale price to the winning bid amount, add eBay fees, then save. The auction will be marked <strong>Ended — Sold</strong> and linked to the new sale record.
+    </div>
+  </div>
+
+  <!-- Sale form -->
+  <div class="col-12 col-md-8 order-md-1">
+    <div class="card">
+      <div class="card-header"><h5 class="mb-0">{{ title }}</h5></div>
+      <div class="card-body">{% crispy form %}</div>
+    </div>
+  </div>
+</div>
+{% endblock %}

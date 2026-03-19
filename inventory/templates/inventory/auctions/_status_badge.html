@@ -1,0 +1,6 @@
+{% comment %}Expects `auction` in context{% endcomment %}
+{% if auction.status == 'active' %}<span class="badge bg-success">Active</span>
+{% elif auction.status == 'ended_sold' %}<span class="badge bg-primary">Sold</span>
+{% elif auction.status == 'ended_unsold' %}<span class="badge bg-secondary">Unsold</span>
+{% elif auction.status == 'cancelled' %}<span class="badge bg-dark">Cancelled</span>
+{% else %}<span class="badge bg-secondary">{{ auction.get_status_display }}</span>{% endif %}

@@ -1,0 +1,214 @@
+{% extends "inventory/base.html" %}
+{% load inventory_tags %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1 class="h3 mb-0"><i class="bi bi-speedometer2 me-2"></i>Dashboard</h1>
+  <a href="{% url 'inventory:item_create' %}" class="btn btn-success">
+    <i class="bi bi-plus-lg me-1"></i>Add Item
+  </a>
+</div>
+
+<!-- Summary cards -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-3">
+    <div class="card text-center border-primary">
+      <div class="card-body py-3">
+        <div class="fs-2 fw-bold text-primary">{{ active_item_count }}</div>
+        <div class="small text-muted">Active Items</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card text-center border-warning">
+      <div class="card-body py-3">
+        <div class="fs-2 fw-bold text-warning">{{ open_order_count }}</div>
+        <div class="small text-muted">Open Orders</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card text-center border-success">
+      <div class="card-body py-3">
+        <div class="fs-2 fw-bold" style="color: var(--bs-green)">{{ active_auction_count }}</div>
+        <div class="small text-muted">Live Auctions</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card text-center border-info">
+      <div class="card-body py-3">
+        <div class="fs-2 fw-bold text-info">{{ available_parts }}</div>
+        <div class="small text-muted">Parts Available</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card text-center border-success">
+      <div class="card-body py-3">
+        <div class="fs-2 fw-bold text-success">{{ total_revenue|currency }}</div>
+        <div class="small text-muted">Total Revenue (net)</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <!-- Status breakdown -->
+  <div class="col-12 col-md-4">
+    <div class="card h-100">
+      <div class="card-header"><i class="bi bi-bar-chart me-2"></i>Items by Status</div>
+      <div class="card-body p-0">
+        <ul class="list-group list-group-flush">
+          {% for status, label in status_choices_display %}
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <a href="{% url 'inventory:item_list' %}?status={{ status }}" class="text-decoration-none text-body">{{ label }}</a>
+            <span class="badge bg-secondary rounded-pill">{{ status_counts|get_item:status }}</span>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Items -->
+  <div class="col-12 col-md-8">
+    <div class="card h-100">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-clock-history me-2"></i>Recent Active Items</span>
+        <a href="{% url 'inventory:item_list' %}" class="btn btn-sm btn-outline-secondary">View All</a>
+      </div>
+      <div class="card-body p-0">
+        {% if active_items %}
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead><tr>
+              <th>Item</th><th>Acquired</th><th>Condition</th><th>Status</th>
+            </tr></thead>
+            <tbody>
+              {% for item in active_items %}
+              <tr>
+                <td><a href="{{ item.get_absolute_url }}">{{ item.display_name }}</a></td>
+                <td class="text-muted small">{{ item.acquisition_date }}</td>
+                <td>{% include "inventory/items/_condition_badge.html" %}</td>
+                <td>{% include "inventory/items/_status_badge.html" %}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+          <p class="text-muted p-3 mb-0">No active items. <a href="{% url 'inventory:item_create' %}">Add one!</a></p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Active Auctions -->
+{% if active_auctions %}
+<div class="row g-3 mb-4">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-hammer me-2"></i>Live Auctions</span>
+        <a href="{% url 'inventory:auction_list' %}" class="btn btn-sm btn-outline-secondary">View All</a>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead><tr><th>Title</th><th>Item / Part</th><th>End Date</th><th>Start Bid</th><th>BIN</th><th></th></tr></thead>
+          <tbody>
+            {% for auction in active_auctions %}
+            <tr>
+              <td><a href="{{ auction.get_absolute_url }}">{{ auction.title }}</a></td>
+              <td class="small">
+                {% if auction.item %}<a href="{{ auction.item.get_absolute_url }}">{{ auction.item.display_name }}</a>
+                {% elif auction.part %}{{ auction.part }}
+                {% else %}—{% endif %}
+              </td>
+              <td class="small text-muted">{{ auction.end_date }}</td>
+              <td class="small">{% if auction.starting_bid %}${{ auction.starting_bid }}{% else %}—{% endif %}</td>
+              <td class="small">{% if auction.buy_it_now %}${{ auction.buy_it_now }}{% else %}—{% endif %}</td>
+              <td class="text-end">
+                <a href="{% url 'inventory:auction_convert' auction.pk %}" class="btn btn-sm btn-success">
+                  <i class="bi bi-arrow-right-circle me-1"></i>Convert
+                </a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- Open Orders + Recent Sales -->
+<div class="row g-3">
+  <div class="col-12 col-md-6">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-cart me-2"></i>Open Orders</span>
+        <a href="{% url 'inventory:order_list' %}" class="btn btn-sm btn-outline-secondary">View All</a>
+      </div>
+      <div class="card-body p-0">
+        {% if open_orders %}
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead><tr><th>Description</th><th>Supplier</th><th>Cost</th><th>Status</th></tr></thead>
+            <tbody>
+              {% for order in open_orders %}
+              <tr>
+                <td><a href="{{ order.get_absolute_url }}">{{ order.description }}</a></td>
+                <td class="small">{{ order.supplier_display }}</td>
+                <td>${{ order.total_cost }}</td>
+                <td>{% include "inventory/orders/_status_badge.html" %}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+          <p class="text-muted p-3 mb-0">No open orders.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-md-6">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-cash-coin me-2"></i>Recent Sales</span>
+        <a href="{% url 'inventory:sale_list' %}" class="btn btn-sm btn-outline-secondary">View All</a>
+      </div>
+      <div class="card-body p-0">
+        {% if recent_sales %}
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead><tr><th>What</th><th>Date</th><th>Price</th><th>Net</th></tr></thead>
+            <tbody>
+              {% for sale in recent_sales %}
+              <tr>
+                <td>
+                  <a href="{{ sale.get_absolute_url }}">
+                    {% if sale.item %}{{ sale.item.display_name }}{% elif sale.part %}{{ sale.part }}{% else %}{{ sale.description|default:"—" }}{% endif %}
+                  </a>
+                </td>
+                <td class="small text-muted">{{ sale.sale_date }}</td>
+                <td>${{ sale.sale_price }}</td>
+                <td class="text-success">{{ sale.net_amount|currency }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+          <p class="text-muted p-3 mb-0">No sales yet. <a href="{% url 'inventory:sale_create' %}">Record one!</a></p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

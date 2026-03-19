@@ -1,0 +1,7 @@
+{% comment %}Expects `order` in context{% endcomment %}
+{% if order.status == 'ordered' %}<span class="badge bg-warning text-dark">Ordered</span>
+{% elif order.status == 'shipped' %}<span class="badge bg-info text-dark">Shipped</span>
+{% elif order.status == 'received' %}<span class="badge bg-success">Received</span>
+{% elif order.status == 'returned' %}<span class="badge bg-secondary">Returned</span>
+{% elif order.status == 'cancelled' %}<span class="badge bg-dark">Cancelled</span>
+{% else %}<span class="badge bg-secondary">{{ order.get_status_display }}</span>{% endif %}

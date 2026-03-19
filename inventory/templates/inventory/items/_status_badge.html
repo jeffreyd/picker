@@ -1,0 +1,10 @@
+{% comment %}Expects `item` in context{% endcomment %}
+{% if item.status == 'acquired' %}<span class="badge bg-secondary">Acquired</span>
+{% elif item.status == 'testing' %}<span class="badge bg-info text-dark">Testing</span>
+{% elif item.status == 'repairing' %}<span class="badge bg-warning text-dark">Repairing</span>
+{% elif item.status == 'parting_out' %}<span class="badge bg-primary">Parting Out</span>
+{% elif item.status == 'listed' %}<span class="badge bg-success">Listed</span>
+{% elif item.status == 'sold' %}<span class="badge bg-success">Sold</span>
+{% elif item.status == 'donated' %}<span class="badge bg-light text-dark">Donated</span>
+{% elif item.status == 'disposed' %}<span class="badge bg-dark">Disposed</span>
+{% else %}<span class="badge bg-secondary">{{ item.get_status_display }}</span>{% endif %}

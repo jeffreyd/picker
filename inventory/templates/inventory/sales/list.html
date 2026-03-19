@@ -1,0 +1,36 @@
+{% extends "inventory/base.html" %}
+{% load inventory_tags %}
+{% block title %}Sales{% endblock %}
+{% block nav_sales %}active{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0"><i class="bi bi-cash-coin me-2"></i>Sales</h1>
+  <a href="{% url 'inventory:sale_create' %}" class="btn btn-success">
+    <i class="bi bi-plus-lg me-1"></i>Record Sale
+  </a>
+</div>
+
+<form class="row g-2 mb-3"
+      hx-get="{% url 'inventory:sale_list' %}"
+      hx-target="#results"
+      hx-trigger="change, input delay:400ms"
+      hx-push-url="true">
+  <div class="col-12 col-md-7">
+    <input type="search" name="q" value="{{ q }}" class="form-control"
+           placeholder="Search sales..." autocomplete="off">
+  </div>
+  <div class="col-12 col-md-4">
+    <select name="platform" class="form-select">
+      <option value="">All Platforms</option>
+      {% for val, label in platform_choices %}
+        <option value="{{ val }}" {% if val == platform %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+  </div>
+</form>
+
+<div id="results">
+  {% include "inventory/sales/_table.html" %}
+</div>
+{% endblock %}
